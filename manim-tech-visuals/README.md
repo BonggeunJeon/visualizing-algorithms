@@ -19,7 +19,7 @@ Experience converting formulas & research concepts into code
 
 🎥 Example Animation
 
-![Parameter Retriever](.\Hospital\outputs\Parameter_Retreiver.gif)
+![Parameter Retriever](https://github.com/user-attachments/assets/113172e1-98dd-49c0-872b-e20bcc569ee6)
 
 
 🧠 Motivation
