@@ -33,6 +33,19 @@ To deepen my understanding, I build animations that explain:
 
 This repository is both a study tool and a portfolio.
 
+🔒 Why Animations Instead of Code?
+
+Due to code security and confidentiality restrictions in the hospital environment where part of my research is conducted, I am not allowed to upload project source code or certain implementation details publicly.
+
+To still communicate my understanding and demonstrate my work, I use Manim animations to visually explain:
+ 
+    - Models I analyzed
+    - Pipelines I implemented
+    - Frameworks I worked with
+    - Concepts from restricted codebases
+
+These animations serve as a safe and effective way to showcase my technical reasoning, understanding of algorithms, and ability to translate research into working systems—without exposing sensitive code.
+
 🤝 Contact
 
 If you're interested in collaboration or research topics:
