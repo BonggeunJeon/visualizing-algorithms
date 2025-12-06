@@ -1,5 +1,6 @@
-Manim Tech Visuals
 
+# Manim Tech Visuals
+ 
 Visual explanations of algorithms, ML concepts, and research ideas, created using the Manim Python library.
 This repository showcases animations I made to better understand (and explain) concepts I analyzed or implemented—such as diffusion models, flow matching, robotics pipelines, and more.
 
