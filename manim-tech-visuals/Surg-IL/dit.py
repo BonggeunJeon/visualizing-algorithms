@@ -238,6 +238,204 @@ class DiTVisualization(MovingCameraScene):
             self.wait(0.3)
         
         self.wait(1)
+
+        # Step 8: Draw Decoder input connections (three distinct inputs)
+        # Yellow line from last encoder layer (output) to first decoder layer (input)
+        encoder_last_layer = encoder_layers[-1]
+        decoder_first_layer = decoder_layers[0]
+        connection_line = Arrow(
+            encoder_last_layer.get_right(),
+            decoder_first_layer.get_left(),
+            color=YELLOW,
+            stroke_width=2
+        )
+
+        # Middle label: Observation Tokens (kept at its current position, used as reference)
+        line_center = connection_line.get_center()
+        observation_label = Tex("Observation Tokens", color=WHITE).scale(0.5)
+        observation_label.move_to(line_center + UP * 0.3)
+
+        # Create top and bottom labels, vertically aligned to the left of Observation Tokens
+        noised_label = Tex("Noised Action", color=WHITE).scale(0.5)
+        timestep_label = Tex("Timestep", color=WHITE).scale(0.5)    
+
+        vertical_gap = 0.4
+        # Position top label above Observation Tokens
+        noised_label.next_to(observation_label, UP, buff=vertical_gap * 3.5)
+        noised_label.align_to(observation_label, LEFT)
+        # Position bottom label below Observation Tokens
+        timestep_label.next_to(observation_label, DOWN, buff=vertical_gap * 4.5)
+        timestep_label.align_to(observation_label, LEFT)
+
+        # Decoder geometry references
+        decoder_top = decoder_first_layer.get_top()
+        decoder_bottom = decoder_first_layer.get_bottom()
+        decoder_left = decoder_first_layer.get_left()
+
+        # Orthogonal Yellow arrows from labels into the decoder
+        # Top label: ㄱ-shaped (right then down into top of decoder)
+        top_start = noised_label.get_right() + RIGHT * 0.3
+        top_elbow = np.array([decoder_top[0], top_start[1], 0])
+        top_horizontal = Line(top_start, top_elbow, color=YELLOW, stroke_width=2)
+        top_vertical = Arrow(
+            top_elbow,
+            decoder_top,
+            color=YELLOW,
+            stroke_width=2,
+            buff=0
+        )
+
+        # Bottom label: ㄴ-shaped (right then up into bottom of decoder)
+        bottom_start = timestep_label.get_right() + RIGHT * 0.3
+        bottom_elbow = np.array([decoder_bottom[0], bottom_start[1], 0])
+        bottom_horizontal = Line(bottom_start, bottom_elbow, color=YELLOW, stroke_width=2)
+        bottom_vertical = Arrow(
+            bottom_elbow,
+            decoder_bottom,
+            color=YELLOW,
+            stroke_width=3,
+            buff=0
+        )
+
+        # Animate encoder-to-decoder arrow plus all three label connections
+        self.play(
+            Create(connection_line),
+            Write(observation_label),
+            Write(noised_label),
+            Write(timestep_label),
+            Create(top_horizontal),
+            Create(top_vertical),
+            Create(bottom_horizontal),
+            Create(bottom_vertical),
+            run_time=1.5
+        )
+        self.wait(1)
+
+        # Step 9: Add rounded boxes around Observation Tokens and Timestep
+        obs_box = SurroundingRectangle(
+            observation_label,
+            color=YELLOW,
+            corner_radius=0.15,
+            buff=0.12,
+            stroke_width=2
+        )
+        timestep_box = SurroundingRectangle(
+            timestep_label,
+            color=YELLOW,
+            corner_radius=0.15,
+            buff=0.12,
+            stroke_width=2
+        )
+
+        self.play(
+            Create(obs_box),
+            Create(timestep_box),
+            run_time=0.8
+        )
+        self.wait(1)
+
+        # Step 10: Collapse inputs into a single Conditioning Tensor concept
+        # Group selected elements related to conditioning inputs
+        conditioning_group = VGroup(
+            connection_line,
+            observation_label,
+            timestep_label,
+            bottom_horizontal,
+            bottom_vertical,
+            obs_box,
+            timestep_box,
+        )
+
+        # New label representing the merged conditioning signal
+        conditioning_label = Tex("Conditioning Tensor", color=WHITE).scale(0.5)
+        # Place at the former position of observation_label
+        conditioning_label.move_to(encoder_last_layer.get_center() + RIGHT * 2.5)
+
+        # Morph the group into the Conditioning Tensor label
+        self.play(
+            ReplacementTransform(conditioning_group, conditioning_label),
+            run_time=1.2
+        )
+        self.wait(0.5)
+
+        # New yellow arrow from Conditioning Tensor into the first decoder layer
+        conditioning_arrow = Arrow(
+            conditioning_label.get_right() + RIGHT * 0.3,
+            decoder_first_layer.get_left() + LEFT * 0.1,
+            color=YELLOW,
+            stroke_width=2,
+            buff=0
+        )
+        self.play(Create(conditioning_arrow), run_time=0.8)
+        self.wait(0.5)
+
+        # Step 11: Sequentially highlight decoder layers to show propagation
+        for layer in decoder_layers:
+            self.play(layer.animate.set_color(RED), run_time=0.4)
+            self.wait(0.1)
+        self.wait(1)
+
+        # Step 12: Collapse conditioning inputs into a single decoder output arrow
+        input_components_group = VGroup(
+            conditioning_arrow,
+            conditioning_label,
+            top_horizontal,
+            top_vertical,
+            noised_label,
+        )
+
+        # Output arrow starting from the right side of the last decoder layer
+        decoder_last_layer = decoder_layers[-1]
+        output_arrow_end = decoder_last_layer.get_right() + RIGHT * 1.0
+        output_arrow = Arrow(
+            decoder_last_layer.get_right(),
+            output_arrow_end,
+            color=YELLOW,
+            stroke_width=2,
+            buff=0
+        )
+
+        self.play(
+            ReplacementTransform(input_components_group, output_arrow),
+            run_time=1.0
+        )
+        self.wait(0.5)
+
+        # Step 13: Shift decoder system left to make space for final label
+        decoder_system = VGroup(decoder_block, decoder_layers, output_arrow, decoder_label)
+        self.play(
+            decoder_system.animate.shift(LEFT * 3.5),
+            run_time=1.0
+        )
+        self.wait(0.2)
+
+        # Step 14: Add final denoised output tensor and label
+        # Create 3D output tensor (S=1, B=1, D=8), then rotate to appear tall and vertical
+        output_tensor_center = output_arrow.get_end() + RIGHT * 1.5
+        denoised_tensor = self.create_tensor_3d_cubes(
+            S=1, B=1, D=8,
+            position=output_tensor_center,
+            cube_size=0.3,
+            color=RED,
+            opacity=0.5
+        )
+        # Rotate in the screen plane so the tensor reads as a vertical column
+        denoised_tensor.rotate(PI / 2, axis=OUT)
+        denoised_tensor.rotate(5 * DEGREES, axis=UP)
+        denoised_tensor.rotate(-10 * DEGREES, axis=RIGHT)
+        
+
+        # Final label directly below the tensor
+        denoised_label = Tex("Denoised Action Tensor", color=WHITE).scale(0.5)
+        denoised_label.next_to(denoised_tensor, DOWN, buff=0.3)
+
+        # Show tensor and label together as final result
+        self.play(
+            Create(denoised_tensor),
+            Write(denoised_label),
+            run_time=0.8
+        )
+        self.wait(1)
     
     def create_tensor_3d_cubes(self, S: int, B: int, D: int, 
                                position: np.ndarray, cube_size: float = 0.08,
